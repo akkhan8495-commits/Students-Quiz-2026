@@ -51,15 +51,36 @@ function showQuestion() {
     const optDiv = document.getElementById('options');
     const progEl = document.getElementById('q-progress');
 
+    // FINAL MARKS SCREEN
     if (currentIndex >= allQuestions.length) {
         progEl.innerText = "Test Finished!";
         qEl.innerText = "Well Done!";
+        
         optDiv.innerHTML = `
-            <div style="text-align: center; background: #e0f2fe; padding: 30px; border-radius: 15px; border: 2px solid #0369a1;">
-                <h2 style="color: #0c4a6e; margin-top: 0;">Your Marks</h2>
-                <div style="font-size: 64px; font-weight: bold; color: #0284c7;">${score} / ${allQuestions.length}</div>
-                <button onclick="location.reload()" style="background: #0284c7; color: white; border: none; padding: 12px 25px; border-radius: 8px; cursor: pointer;">Retake</button>
+            <div style="text-align: center; background: #fffbeb; padding: 30px; border-radius: 15px; border: 3px solid #f59e0b; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
+                <h2 style="color: #92400e; margin-top: 0;">Your Final Marks</h2>
+                <div style="font-size: 64px; font-weight: bold; color: #d97706; margin: 10px 0;">${score} / ${allQuestions.length}</div>
+                
+                <hr style="border: 0; border-top: 1px solid #fde68a; margin: 20px 0;">
+                
+                <div style="background: #ef4444; color: white; padding: 15px; border-radius: 8px; animation: pulse 2s infinite;">
+                    <strong style="font-size: 18px; display: block; margin-bottom: 5px;">⚠️ IMPORTANT ACTION REQUIRED:</strong>
+                    <span style="font-size: 16px;">Please <strong>TAKE A SCREENSHOT</strong> of this screen now. 
+                    This is your only proof of completion to show your teacher.</span>
+                </div>
+
+                <button onclick="location.reload()" style="margin-top: 20px; background: #d97706; color: white; border: none; padding: 12px 25px; border-radius: 8px; cursor: pointer; font-weight: bold; width: 100%;">
+                    Retake Test
+                </button>
             </div>
+
+            <style>
+                @keyframes pulse {
+                    0% { transform: scale(1); }
+                    50% { transform: scale(1.02); }
+                    100% { transform: scale(1); }
+                }
+            </style>
         `;
         return;
     }
