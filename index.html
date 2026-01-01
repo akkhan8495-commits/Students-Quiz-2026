@@ -31,5 +31,15 @@
     </div>
 
     <script type="module" src="app.js"></script>
+    <script type="module">
+      import { getAuth, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+      const auth = getAuth();
+      
+      document.getElementById('logoutBtn').onclick = () => {
+        signOut(auth).then(() => {
+          window.location.reload();
+        });
+      };
+    </script>
 </body>
 </html>
