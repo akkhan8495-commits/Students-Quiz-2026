@@ -91,3 +91,18 @@ async function submitAnswer(choice) {
     });
     alert("Answer sent!");
 }
+
+// 2. Add this logout listener
+const logoutBtn = document.getElementById('logoutBtn');
+
+if (logoutBtn) {
+    logoutBtn.addEventListener('click', () => {
+        signOut(auth).then(() => {
+            // This forces the page to reload and show the login screen again
+            window.location.reload(); 
+            console.log("User signed out successfully");
+        }).catch((error) => {
+            alert("Error logging out: " + error.message);
+        });
+    });
+}
