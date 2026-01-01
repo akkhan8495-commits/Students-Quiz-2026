@@ -16,16 +16,21 @@ const auth = getAuth(app);
 const db = getDatabase(app);
 
 // Auth Logic
+// Add "window." before the function names
 window.handleLogin = () => {
     const email = document.getElementById('email').value;
     const pass = document.getElementById('password').value;
-    signInWithEmailAndPassword(auth, email, pass).catch(err => alert(err.message));
+    console.log("Login clicked for:", email); // This helps you see it working in console
+    signInWithEmailAndPassword(auth, email, pass)
+        .catch(err => alert(err.message));
 };
 
 window.handleSignup = () => {
     const email = document.getElementById('email').value;
     const pass = document.getElementById('password').value;
-    createUserWithEmailAndPassword(auth, email, pass).catch(err => alert(err.message));
+    console.log("Signup clicked for:", email);
+    createUserWithEmailAndPassword(auth, email, pass)
+        .catch(err => alert(err.message));
 };
 
 // UI Logic
