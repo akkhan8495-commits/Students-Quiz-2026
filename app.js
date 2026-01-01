@@ -92,15 +92,15 @@ async function submitAnswer(choice) {
     alert("Answer sent!");
 }
 
-// 2. Add this logout listener
+// Add this at the bottom of app.js
 const logoutBtn = document.getElementById('logoutBtn');
 
 if (logoutBtn) {
     logoutBtn.addEventListener('click', () => {
         signOut(auth).then(() => {
-            // This forces the page to reload and show the login screen again
-            window.location.reload(); 
-            console.log("User signed out successfully");
+            console.log("User signed out");
+            // Your onAuthStateChanged function will automatically 
+            // handle hiding the quiz and showing the login box now.
         }).catch((error) => {
             alert("Error logging out: " + error.message);
         });
