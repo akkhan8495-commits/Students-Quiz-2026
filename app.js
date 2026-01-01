@@ -106,3 +106,20 @@ if (logoutBtn) {
         });
     });
 }
+// --- LOGOUT SYSTEM ---
+// This must be outside of any other functions to work correctly
+const logoutBtn = document.getElementById('logoutBtn');
+
+if (logoutBtn) {
+    logoutBtn.addEventListener('click', (e) => {
+        e.preventDefault(); // Stops the page from acting weirdly
+        signOut(auth).then(() => {
+            console.log("Sign-out successful.");
+            // We force a refresh to clear all student data from the screen
+            window.location.reload(); 
+        }).catch((error) => {
+            console.error("Logout Error:", error);
+            alert("Logout failed: " + error.message);
+        });
+    });
+}
