@@ -16,22 +16,38 @@ const auth = getAuth(app);
 const db = getDatabase(app);
 
 // Auth Logic
-// Add "window." before the function names
-window.handleLogin = () => {
-    const email = document.getElementById('email').value;
-    const pass = document.getElementById('password').value;
-    console.log("Login clicked for:", email); // This helps you see it working in console
-    signInWithEmailAndPassword(auth, email, pass)
-        .catch(err => alert(err.message));
-};
 
-window.handleSignup = () => {
+// 1. Setup the Login Button
+document.getElementById('loginBtn').addEventListener('click', () => {
     const email = document.getElementById('email').value;
     const pass = document.getElementById('password').value;
-    console.log("Signup clicked for:", email);
+    
+    if(!email || !pass) return alert("Please fill all fields");
+
+    signInWithEmailAndPassword(auth, email, pass)
+        .then(() => {
+            console.log("Login Successful");
+        })
+        .catch((error) => {
+            alert("Login Error: " + error.message);
+        });
+});
+
+// 2. Setup the Signup Button
+document.getElementById('signupBtn').addEventListener('click', () => {
+    const email = document.getElementById('email').value;
+    const pass = document.getElementById('password').value;
+
+    if(!email || !pass) return alert("Please fill all fields");
+
     createUserWithEmailAndPassword(auth, email, pass)
-        .catch(err => alert(err.message));
-};
+        .then(() => {
+            console.log("Account Created");
+        })
+        .catch((error) => {
+            alert("Signup Error: " + error.message);
+        });
+});
 
 // UI Logic
 onAuthStateChanged(auth, (user) => {
