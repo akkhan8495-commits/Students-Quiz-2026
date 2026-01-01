@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Teacher Control Panel</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="card" style="max-width: 500px;">
+        <h2>Teacher Control Room</h2>
+        <p>Update the question for all students instantly</p>
+        <hr>
+        
+        <input type="text" id="admin-q" placeholder="Enter Question">
+        <input type="text" id="opt1" placeholder="Option 1">
+        <input type="text" id="opt2" placeholder="Option 2">
+        <input type="text" id="opt3" placeholder="Option 3">
+        <input type="text" id="opt4" placeholder="Option 4">
+        
+        <button id="pushBtn" style="background: #059669;">Push Question to Students</button>
+        
+        <div id="status" style="margin-top: 15px; color: green; font-weight: bold;"></div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+        // Same config you provided
+        const firebaseConfig = {
+          apiKey: "AIzaSyAfCfO9iIOxj3wNYcFSntqXaY_ESQ5pYOA",
+          authDomain: "studentquiz2026.firebaseapp.com",
+          projectId: "studentquiz2026",
+          storageBucket: "studentquiz2026.firebasestorage.app",
+          messagingSenderId: "31091552266",
+          appId: "1:31091552266:web:a5b83f22e393a25abeaff3"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        document.getElementById('pushBtn').onclick = async () => {
+            const q = document.getElementById('admin-q').value;
+            const o1 = document.getElementById('opt1').value;
+            const o2 = document.getElementById('opt2').value;
+            const o3 = document.getElementById('opt3').value;
+            const o4 = document.getElementById('opt4').value;
+
+            try {
+                // This updates the "live" document that all students are listening to
+                await setDoc(doc(db, "quiz", "live"), {
+                    question: q,
+                    options: [o1, o2, o3, o4],
+                    timestamp: new Date()
+                });
+                document.getElementById('status').innerText = "Question Sent Successfully!";
+                setTimeout(() => document.getElementById('status').innerText = "", 3000);
+            } catch (e) {
+                alert("Error: " + e.message);
+            }
+        };
+    </script>
+</body>
+</html>
