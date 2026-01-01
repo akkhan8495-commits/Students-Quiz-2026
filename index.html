@@ -30,16 +30,28 @@
         </div>
     </div>
 
-    <script type="module" src="app.js"></script>
     <script type="module">
       import { getAuth, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-      const auth = getAuth();
       
-      document.getElementById('logoutBtn').onclick = () => {
-        signOut(auth).then(() => {
-          window.location.reload();
-        });
-      };
+      // This waits for the button to exist before trying to click it
+      const interval = setInterval(() => {
+        const btn = document.getElementById('logoutBtn');
+        if (btn) {
+          clearInterval(interval);
+          btn.onclick = async () => {
+            const auth = getAuth();
+            try {
+              await signOut(auth);
+              console.log("Logout successful!");
+              window.location.reload(); 
+            } catch (err) {
+              console.error("Logout failed:", err);
+              // If Firebase fails, we force a reload anyway to reset the UI
+              window.location.reload(); 
+            }
+          };
+        }
+      }, 500);
     </script>
 </body>
 </html>
