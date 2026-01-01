@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Mega Quiz 2026</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="auth-container">
+        <h2>Student Login</h2>
+        <input type="email" id="email" placeholder="School Email">
+        <input type="password" id="password" placeholder="Password">
+        <button onclick="handleSignup()">Sign Up</button>
+        <button onclick="handleLogin()">Login</button>
+    </div>
+
+    <div id="quiz-container" style="display:none;">
+        <h2 id="welcome-msg"></h2>
+        <div id="question-box">
+            <h3 id="question-text">Waiting for teacher to start...</h3>
+            <div id="options"></div>
+        </div>
+        <button onclick="handleLogout()">Logout</button>
+    </div>
+
+    <script type="module" src="app.js"></script>
+</body>
+</html>
