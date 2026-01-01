@@ -1,70 +1,59 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-import { getFirestore, doc, onSnapshot, setDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import { getDatabase, ref, onValue, set, push } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
-// YOUR CONFIGURATION
 const firebaseConfig = {
   apiKey: "AIzaSyAfCfO9iIOxj3wNYcFSntqXaY_ESQ5pYOA",
   authDomain: "studentquiz2026.firebaseapp.com",
   projectId: "studentquiz2026",
   storageBucket: "studentquiz2026.firebasestorage.app",
   messagingSenderId: "31091552266",
-  appId: "1:31091552266:web:a5b83f22e393a25abeaff3",
-  measurementId: "G-NCM00Y177W"
+  appId: "1:31091552266:web:a5b83f22e393a25abeaff3"
 };
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
-const db = getFirestore(app);
+const db = getDatabase(app);
 
-// DOM Elements
-const authBox = document.getElementById('auth-box');
-const quizBox = document.getElementById('quiz-box');
-const userDisplay = document.getElementById('user-display');
-
-// 1. AUTH LOGIC: Manage Student Entry
-window.handleSignup = () => {
-    const email = document.getElementById('email').value;
-    const pass = document.getElementById('password').value;
-    createUserWithEmailAndPassword(auth, email, pass).catch(err => alert(err.message));
-};
-
+// Auth Logic
 window.handleLogin = () => {
     const email = document.getElementById('email').value;
     const pass = document.getElementById('password').value;
     signInWithEmailAndPassword(auth, email, pass).catch(err => alert(err.message));
 };
 
-document.getElementById('signupBtn').onclick = window.handleSignup;
-document.getElementById('loginBtn').onclick = window.handleLogin;
-document.getElementById('logoutBtn').onclick = () => signOut(auth);
+window.handleSignup = () => {
+    const email = document.getElementById('email').value;
+    const pass = document.getElementById('password').value;
+    createUserWithEmailAndPassword(auth, email, pass).catch(err => alert(err.message));
+};
 
-// 2. STATE LOGIC: Check if user is logged in
+// UI Logic
 onAuthStateChanged(auth, (user) => {
     if (user) {
-        authBox.style.display = 'none';
-        quizBox.style.display = 'block';
-        userDisplay.innerText = `Logged in: ${user.email}`;
+        document.getElementById('auth-box').style.display = 'none';
+        document.getElementById('quiz-box').style.display = 'block';
         listenForQuestions();
     } else {
-        authBox.style.display = 'block';
-        quizBox.style.display = 'none';
+        document.getElementById('auth-box').style.display = 'block';
+        document.getElementById('quiz-box').style.display = 'none';
     }
 });
 
-// 3. REAL-TIME LOGIC: Update quiz for 500+ students instantly
+// Real-time Quiz Logic
 function listenForQuestions() {
-    onSnapshot(doc(db, "quiz", "live"), (doc) => {
-        if (doc.exists()) {
-            const data = doc.data();
+    const quizRef = ref(db, 'liveQuiz');
+    onValue(quizRef, (snapshot) => {
+        const data = snapshot.val();
+        if (data) {
             document.getElementById('q-text').innerText = data.question;
-            const optionsGrid = document.getElementById('options-grid');
-            optionsGrid.innerHTML = ''; // Clear old buttons
+            const grid = document.getElementById('options-grid');
+            grid.innerHTML = '';
             data.options.forEach(opt => {
                 const btn = document.createElement('button');
                 btn.innerText = opt;
                 btn.onclick = () => submitAnswer(opt);
-                optionsGrid.appendChild(btn);
+                grid.appendChild(btn);
             });
         }
     });
@@ -72,10 +61,12 @@ function listenForQuestions() {
 
 async function submitAnswer(choice) {
     const user = auth.currentUser;
-    await setDoc(doc(db, "submissions", user.uid), {
+    // Push adds a new entry to a list so 500 answers don't overwrite each other
+    const answerRef = ref(db, 'submissions/' + user.uid);
+    set(answerRef, {
         email: user.email,
         answer: choice,
-        timestamp: new Date()
+        time: new Date().toISOString()
     });
-    alert("Answer submitted!");
+    alert("Answer sent!");
 }
