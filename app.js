@@ -116,17 +116,22 @@ window.handleLogout = () => {
         alert("Logout failed: " + error.message);
     });
 };
-// FORCED LOGOUT ATTACHMENT
-const logoutButton = document.getElementById('logoutBtn');
-if (logoutButton) {
-    logoutButton.onclick = () => {
-        console.log("Logout button clicked...");
-        signOut(auth).then(() => {
-            console.log("Firebase signed out.");
-            window.location.reload(); // This forces the UI to reset
-        }).catch((error) => {
-            console.error("Firebase Signout Error:", error);
-            alert("Logout failed. Please refresh the page.");
-        });
+// --- EMERGENCY LOGOUT OVERRIDE ---
+const logoutBtn = document.getElementById('logoutBtn');
+
+if (logoutBtn) {
+    logoutBtn.onclick = () => {
+        console.log("Forcing logout...");
+        
+        // 1. Attempt Firebase signout (even if it errors, we move to step 2)
+        signOut(auth).catch(() => console.log("Firebase sync failed, forcing local reset."));
+        
+        // 2. Clear any saved session data
+        localStorage.clear();
+        sessionStorage.clear();
+        
+        // 3. FORCE THE PAGE TO RELOAD
+        // This will trigger your onAuthStateChanged to show the login box
+        window.location.href = window.location.pathname; 
     };
 }
