@@ -53,5 +53,62 @@
         }
       }, 500);
     </script>
+        <div id="leaderboard-overlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:white; z-index:9999; overflow-y:auto; padding:20px;">
+        <button onclick="document.getElementById('leaderboard-overlay').style.display='none'" style="float:right; padding:10px; background:#ef4444; color:white; border:none; border-radius:5px; cursor:pointer;">Close Leaderboard</button>
+        <h1 style="text-align:center;">🏆 Student Leaderboard</h1>
+        <table style="width:100%; border-collapse:collapse; margin-top:20px;">
+            <thead>
+                <tr style="background:#3b82f6; color:white;">
+                    <th style="padding:10px;">Email</th>
+                    <th style="padding:10px;">Score</th>
+                    <th style="padding:10px;">Time</th>
+                </tr>
+            </thead>
+            <tbody id="leaderboard-content">
+                </tbody>
+        </table>
+    </div>
+    
+    <p style="text-align:center; margin-top:50px;">
+        <a href="#" onclick="openLeaderboard()" style="color:#cbd5e1; text-decoration:none; font-size:10px;">Admin View</a>
+    </p>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+    
+        const firebaseConfig = {
+            apiKey: "AIzaSyAfCfO9iIOxj3wNYcFSntqXaY_ESQ5pYOA",
+            authDomain: "studentquiz2026.firebaseapp.com",
+            projectId: "studentquiz2026",
+            databaseURL: "https://studentquiz2026-default-rtdb.firebaseio.com",
+            appId: "1:31091552266:web:a5b83f22e393a25abeaff3"
+        };
+    
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+    
+        window.openLeaderboard = function() {
+            document.getElementById('leaderboard-overlay').style.display = 'block';
+            const content = document.getElementById('leaderboard-content');
+            
+            // Use the same 'leaderboard' path your app.js pushes to
+            onValue(ref(db, 'leaderboard'), (snapshot) => {
+                const data = snapshot.val();
+                if (!data) {
+                    content.innerHTML = "<tr><td colspan='3' style='text-align:center;'>No scores yet.</td></tr>";
+                    return;
+                }
+                const sorted = Object.values(data).sort((a, b) => b.score - a.score);
+                content.innerHTML = sorted.map(s => `
+                    <tr>
+                        <td style="padding:10px; border-bottom:1px solid #eee;">${s.email}</td>
+                        <td style="padding:10px; border-bottom:1px solid #eee;"><b>${s.score} / ${s.total}</b></td>
+                        <td style="padding:10px; border-bottom:1px solid #eee; font-size:12px; color:gray;">${s.timestamp}</td>
+                    </tr>
+                `).join('');
+            });
+        }
+    </script>
 </body>
 </html>
