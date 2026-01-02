@@ -1,38 +1,36 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Master Leaderboard & Test Data</title>
+    <meta charset="UTF-8">
+    <title>Class Leaderboard - Quiz 2026</title>
     <link rel="stylesheet" href="style.css">
     <style>
-        body { font-family: sans-serif; background: #f8fafc; padding: 20px; }
-        .container { max-width: 1000px; margin: 0 auto; background: white; padding: 25px; border-radius: 15px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); }
-        .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #e2e8f0; padding-bottom: 15px; }
+        body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; padding: 20px; }
+        .board-container { max-width: 800px; margin: 0 auto; background: white; padding: 30px; border-radius: 15px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
+        h1 { text-align: center; color: #1a73e8; }
         table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        th { background: #1e293b; color: white; padding: 12px; text-align: left; }
-        td { padding: 12px; border-bottom: 1px solid #f1f5f9; }
-        .top-score { background: #dcfce7; font-weight: bold; }
-        .btn-export { background: #059669; color: white; padding: 8px 15px; border-radius: 5px; cursor: pointer; text-decoration: none; font-size: 14px; }
+        th, td { padding: 15px; text-align: left; border-bottom: 1px solid #eee; }
+        th { background: #1a73e8; color: white; border-radius: 5px 5px 0 0; }
+        tr:nth-child(even) { background: #f8f9fa; }
+        .rank { font-weight: bold; color: #5f6368; width: 50px; }
+        .score-pill { background: #e6f4ea; color: #137333; padding: 5px 12px; border-radius: 15px; font-weight: bold; }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <h2>🏆 Master Leaderboard</h2>
-            <button onclick="window.print()" class="btn-export">Print / Save as PDF</button>
-        </div>
-
+    <div class="board-container">
+        <h1>🏆 Quiz Leaderboard</h1>
+        <p style="text-align: center; color: #666;">Top scores from the latest test</p>
         <table>
             <thead>
                 <tr>
-                    <th>Rank</th>
+                    <th class="rank">#</th>
                     <th>Student Email</th>
                     <th>Score</th>
                     <th>Accuracy</th>
-                    <th>Time Submitted</th>
                 </tr>
             </thead>
-            <tbody id="leaderboardBody">
-                <tr><td colspan="5" style="text-align:center;">Loading scores...</td></tr>
+            <tbody id="leaderboardList">
+                <tr><td colspan="4" style="text-align: center;">Waiting for students to finish...</td></tr>
             </tbody>
         </table>
     </div>
@@ -53,29 +51,26 @@
         const db = getDatabase(app);
 
         onValue(ref(db, 'leaderboard'), (snapshot) => {
+            const list = document.getElementById('leaderboardList');
             const data = snapshot.val();
-            const body = document.getElementById('leaderboardBody');
             
             if (!data) {
-                body.innerHTML = '<tr><td colspan="5" style="text-align:center;">No students have finished yet.</td></tr>';
+                list.innerHTML = '<tr><td colspan="4" style="text-align: center;">No data available yet.</td></tr>';
                 return;
             }
 
-            // Convert to array and sort by score (Highest first)
-            const scores = Object.values(data).sort((a, b) => b.score - a.score);
-            
-            body.innerHTML = "";
-            scores.forEach((entry, index) => {
+            // Convert object to array and sort by score (highest first)
+            const entries = Object.values(data).sort((a, b) => b.score - a.score);
+            list.innerHTML = "";
+
+            entries.forEach((entry, index) => {
                 const accuracy = Math.round((entry.score / entry.total) * 100);
-                const rowClass = index < 3 ? 'top-score' : ''; // Highlight top 3
-                
-                body.innerHTML += `
-                    <tr class="${rowClass}">
-                        <td>#${index + 1}</td>
+                list.innerHTML += `
+                    <tr>
+                        <td class="rank">${index + 1}</td>
                         <td>${entry.email}</td>
-                        <td>${entry.score} / ${entry.total}</td>
+                        <td><span class="score-pill">${entry.score} / ${entry.total}</span></td>
                         <td>${accuracy}%</td>
-                        <td style="color: #64748b; font-size: 12px;">${entry.timestamp}</td>
                     </tr>
                 `;
             });
