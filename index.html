@@ -3,85 +3,67 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Student Login & Results</title>
-    <link rel="stylesheet" href="style.css">
+    <title>Student Portal - Login & Results</title>
     <style>
-        /* Styles for the Leaderboard Overlay */
-        #leaderboard-overlay {
-            display: none; 
-            position: fixed; 
-            top: 0; 
-            left: 0; 
-            width: 100%; 
-            height: 100%; 
-            background: white; 
-            z-index: 9999; 
-            overflow-y: auto; 
-            padding: 20px;
-            box-sizing: border-box;
-        }
-        .close-btn {
-            float: right; 
-            padding: 10px 20px; 
-            background: #ef4444; 
-            color: white; 
-            border: none; 
-            border-radius: 5px; 
-            cursor: pointer;
-            font-weight: bold;
-        }
+        /* Modern UI Styles */
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; background: #f0f2f5; display: flex; flex-direction: column; align-items: center; min-height: 100vh; margin: 0; padding: 20px; }
+        .login-card { background: white; padding: 40px; border-radius: 12px; shadow: 0 4px 12px rgba(0,0,0,0.1); width: 100%; max-width: 400px; text-align: center; }
+        h1 { color: #1a73e8; margin-bottom: 30px; }
+        input { width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; }
+        button { width: 100%; padding: 12px; background: #1a73e8; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 16px; font-weight: bold; }
+        button:hover { background: #1557b0; }
+
+        /* Leaderboard Overlay Styles */
+        #leaderboard-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: white; z-index: 1000; overflow-y: auto; padding: 30px; box-sizing: border-box; }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #eee; padding-bottom: 15px; }
         table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        th { background: #3b82f6; color: white; padding: 12px; text-align: left; }
-        td { padding: 12px; border-bottom: 1px solid #e2e8f0; }
-        .admin-link {
-            display: block;
-            text-align: center;
-            margin-top: 40px;
-            color: #cbd5e1;
-            text-decoration: none;
-            font-size: 11px;
-        }
+        th { background: #1a73e8; color: white; padding: 12px; text-align: left; }
+        td { padding: 12px; border-bottom: 1px solid #eee; }
+        .rank { font-weight: bold; color: #5f6368; }
+        .score-p { color: #137333; font-weight: bold; }
+        .admin-trigger { margin-top: 50px; color: #adb5bd; text-decoration: none; font-size: 11px; cursor: pointer; }
     </style>
 </head>
 <body>
 
-    <div class="login-container">
-        <h2>Student Quiz Login</h2>
+    <div class="login-card">
+        <h1>Student Portal</h1>
+        <p>Login to enter the live quiz room.</p>
         <form id="login-form">
-            <input type="email" id="email" placeholder="Email Address" required>
+            <input type="email" id="email" placeholder="Student Email" required>
             <input type="password" id="password" placeholder="Password" required>
-            <button type="submit">Start Test</button>
+            <button type="submit">Enter Quiz Room</button>
         </form>
     </div>
 
-    <div id="leaderboard-overlay">
-        <button class="close-btn" onclick="document.getElementById('leaderboard-overlay').style.display='none'">Close</button>
-        <h1 style="text-align:center; color: #1e293b;">🏆 Live Student Leaderboard</h1>
-        <p style="text-align:center; color: #64748b;">This data is pulled directly from the 'leaderboard' folder</p>
-        
+    <div id="leaderboard-modal">
+        <div class="modal-header">
+            <h2>🏆 Class Leaderboard</h2>
+            <button onclick="document.getElementById('leaderboard-modal').style.display='none'" style="width: auto; background: #ea4335;">Close</button>
+        </div>
         <table>
             <thead>
                 <tr>
-                    <th>Rank</th>
-                    <th>Student Email</th>
+                    <th class="rank">#</th>
+                    <th>Email</th>
                     <th>Score</th>
-                    <th>Time Submitted</th>
+                    <th>Timestamp</th>
                 </tr>
             </thead>
-            <tbody id="leaderboard-content">
-                <tr><td colspan="4" style="text-align:center;">Loading scores...</td></tr>
+            <tbody id="leaderboard-rows">
+                <tr><td colspan="4" style="text-align: center;">Loading data...</td></tr>
             </tbody>
         </table>
     </div>
 
-    <a href="#" class="admin-link" onclick="openLeaderboard()">Admin Leaderboard View</a>
+    <a class="admin-trigger" onclick="viewLeaderboard()">Admin View</a>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
         import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
-        // Firebase Configuration
+        // Your current Firebase Config
         const firebaseConfig = {
             apiKey: "AIzaSyAfCfO9iIOxj3wNYcFSntqXaY_ESQ5pYOA",
             authDomain: "studentquiz2026.firebaseapp.com",
@@ -94,48 +76,39 @@
         const auth = getAuth(app);
         const db = getDatabase(app);
 
-        // --- LOGIN LOGIC ---
-        const loginForm = document.getElementById('login-form');
-        loginForm.addEventListener('submit', (e) => {
+        // --- Handle Login ---
+        document.getElementById('login-form').onsubmit = (e) => {
             e.preventDefault();
             const email = document.getElementById('email').value;
-            const password = document.getElementById('password').value;
+            const pass = document.getElementById('password').value;
+            signInWithEmailAndPassword(auth, email, pass)
+                .then(() => window.location.href = "quiz.html")
+                .catch(err => alert("Error: " + err.message));
+        };
 
-            signInWithEmailAndPassword(auth, email, password)
-                .then(() => {
-                    window.location.href = "quiz.html";
-                })
-                .catch((error) => {
-                    alert("Login Failed: " + error.message);
-                });
-        });
+        // --- Handle Leaderboard ---
+        window.viewLeaderboard = function() {
+            document.getElementById('leaderboard-modal').style.display = 'block';
+            const tableBody = document.getElementById('leaderboard-rows');
 
-        // --- LEADERBOARD LOGIC ---
-        window.openLeaderboard = function() {
-            document.getElementById('leaderboard-overlay').style.display = 'block';
-            const content = document.getElementById('leaderboard-content');
-            
-            // Listen to the leaderboard node
+            // Listening to 'leaderboard' node where app.js sends data
             onValue(ref(db, 'leaderboard'), (snapshot) => {
                 const data = snapshot.val();
                 if (!data) {
-                    content.innerHTML = "<tr><td colspan='4' style='text-align:center;'>No results yet.</td></tr>";
+                    tableBody.innerHTML = "<tr><td colspan='4' style='text-align:center;'>No scores yet</td></tr>";
                     return;
                 }
-
-                // Sort results: Highest score first
                 const sorted = Object.values(data).sort((a, b) => b.score - a.score);
-                
-                content.innerHTML = sorted.map((s, index) => `
+                tableBody.innerHTML = sorted.map((s, i) => `
                     <tr>
-                        <td>#${index + 1}</td>
+                        <td class="rank">${i + 1}</td>
                         <td>${s.email}</td>
-                        <td><b style="color:#16a34a;">${s.score} / ${s.total}</b></td>
-                        <td style="color:#94a3b8; font-size:12px;">${s.timestamp}</td>
+                        <td class="score-p">${s.score} / ${s.total}</td>
+                        <td style="color:#777; font-size:12px;">${s.timestamp}</td>
                     </tr>
                 `).join('');
             });
-        }
+        };
     </script>
 </body>
 </html>
