@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Master Leaderboard & Test Data</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        body { font-family: sans-serif; background: #f8fafc; padding: 20px; }
+        .container { max-width: 1000px; margin: 0 auto; background: white; padding: 25px; border-radius: 15px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); }
+        .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #e2e8f0; padding-bottom: 15px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th { background: #1e293b; color: white; padding: 12px; text-align: left; }
+        td { padding: 12px; border-bottom: 1px solid #f1f5f9; }
+        .top-score { background: #dcfce7; font-weight: bold; }
+        .btn-export { background: #059669; color: white; padding: 8px 15px; border-radius: 5px; cursor: pointer; text-decoration: none; font-size: 14px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h2>🏆 Master Leaderboard</h2>
+            <button onclick="window.print()" class="btn-export">Print / Save as PDF</button>
+        </div>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Rank</th>
+                    <th>Student Email</th>
+                    <th>Score</th>
+                    <th>Accuracy</th>
+                    <th>Time Submitted</th>
+                </tr>
+            </thead>
+            <tbody id="leaderboardBody">
+                <tr><td colspan="5" style="text-align:center;">Loading scores...</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyAfCfO9iIOxj3wNYcFSntqXaY_ESQ5pYOA",
+            authDomain: "studentquiz2026.firebaseapp.com",
+            projectId: "studentquiz2026",
+            databaseURL: "https://studentquiz2026-default-rtdb.firebaseio.com",
+            appId: "1:31091552266:web:a5b83f22e393a25abeaff3"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+
+        onValue(ref(db, 'leaderboard'), (snapshot) => {
+            const data = snapshot.val();
+            const body = document.getElementById('leaderboardBody');
+            
+            if (!data) {
+                body.innerHTML = '<tr><td colspan="5" style="text-align:center;">No students have finished yet.</td></tr>';
+                return;
+            }
+
+            // Convert to array and sort by score (Highest first)
+            const scores = Object.values(data).sort((a, b) => b.score - a.score);
+            
+            body.innerHTML = "";
+            scores.forEach((entry, index) => {
+                const accuracy = Math.round((entry.score / entry.total) * 100);
+                const rowClass = index < 3 ? 'top-score' : ''; // Highlight top 3
+                
+                body.innerHTML += `
+                    <tr class="${rowClass}">
+                        <td>#${index + 1}</td>
+                        <td>${entry.email}</td>
+                        <td>${entry.score} / ${entry.total}</td>
+                        <td>${accuracy}%</td>
+                        <td style="color: #64748b; font-size: 12px;">${entry.timestamp}</td>
+                    </tr>
+                `;
+            });
+        });
+    </script>
+</body>
+</html>
