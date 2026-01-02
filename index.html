@@ -6,27 +6,17 @@
     <title>Student Login - Quiz 2026</title>
     <link rel="stylesheet" href="style.css">
     <style>
-        /* Styles for the leaderboard window */
-        #leaderboard-modal {
-            display: none; 
-            position: fixed; 
-            top: 0; left: 0; 
-            width: 100%; height: 100%; 
-            background: white; 
-            z-index: 9999; 
-            padding: 20px;
+        /* Modern table styling for the leaderboard overlay */
+        #leaderboard-overlay {
+            display: none; position: fixed; top: 0; left: 0; 
+            width: 100%; height: 100%; background: white; 
+            z-index: 10000; overflow-y: auto; padding: 25px;
             box-sizing: border-box;
-            overflow-y: auto;
         }
         table { width: 100%; border-collapse: collapse; margin-top: 20px; }
         th { background: #1a73e8; color: white; padding: 12px; text-align: left; }
         td { padding: 12px; border-bottom: 1px solid #ddd; }
-        .admin-btn-zone {
-            margin-top: 50px;
-            padding: 20px;
-            border: 2px dashed #cbd5e1;
-            text-align: center;
-        }
+        .admin-zone { margin-top: 60px; text-align: center; padding: 20px; border-top: 1px solid #eee; }
     </style>
 </head>
 <body>
@@ -38,31 +28,30 @@
             <input type="email" id="email" placeholder="Student Email" required style="width:100%; padding:10px; margin-bottom:10px;">
             <input type="password" id="password" placeholder="Password" required style="width:100%; padding:10px; margin-bottom:10px;">
         </div>
-        <button id="loginBtn" style="width:100%; padding:10px; background:#1a73e8; color:white; border:none; cursor:pointer;">Enter Quiz Room</button>
+        <button id="loginBtn" style="width:100%; padding:10px; background:#1a73e8; color:white; border:none; border-radius:4px; cursor:pointer;">Enter Quiz Room</button>
     </div>
 
-    <div class="admin-btn-zone">
-        <p style="color: #64748b; font-size: 12px;">TEACHER ONLY AREA</p>
-        <button onclick="viewLeaderboard()" style="background: #334155; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer;">
+    <div class="admin-zone">
+        <button onclick="showResults()" style="background:#475569; color:white; padding:8px 16px; border:none; border-radius:4px; cursor:pointer; font-size:12px;">
             VIEW STUDENT RESULTS
         </button>
     </div>
 
-    <div id="leaderboard-modal">
-        <div style="display: flex; justify-content: space-between; align-items: center;">
-            <h2>🏆 Live Leaderboard</h2>
-            <button onclick="document.getElementById('leaderboard-modal').style.display='none'" style="background:red; color:white; padding:10px; border:none; cursor:pointer;">CLOSE</button>
+    <div id="leaderboard-overlay">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+            <h2>🏆 Live Student Leaderboard</h2>
+            <button onclick="document.getElementById('leaderboard-overlay').style.display='none'" style="background:#dc2626; color:white; border:none; padding:8px 15px; cursor:pointer;">CLOSE</button>
         </div>
         <table>
             <thead>
                 <tr>
-                    <th>Email</th>
+                    <th>Student Email</th>
                     <th>Score</th>
-                    <th>Date</th>
+                    <th>Submitted At</th>
                 </tr>
             </thead>
-            <tbody id="leaderboard-rows">
-                <tr><td colspan="3" style="text-align:center;">Waiting for scores...</td></tr>
+            <tbody id="results-body">
+                <tr><td colspan="3" style="text-align:center;">Fetching live data...</td></tr>
             </tbody>
         </table>
     </div>
@@ -84,7 +73,6 @@
         const auth = getAuth(app);
         const db = getDatabase(app);
 
-        // Login Logic
         document.getElementById('loginBtn').onclick = () => {
             const email = document.getElementById('email').value;
             const pass = document.getElementById('password').value;
@@ -93,21 +81,23 @@
                 .catch(err => alert("Access Denied: " + err.message));
         };
 
-        // Leaderboard Logic - Connects to the 'leaderboard' folder
-        window.viewLeaderboard = function() {
-            document.getElementById('leaderboard-modal').style.display = 'block';
-            const tableBody = document.getElementById('leaderboard-rows');
+        // Leaderboard Logic: Listens to the folder your app.js pushes to
+        window.showResults = function() {
+            document.getElementById('leaderboard-overlay').style.display = 'block';
+            const tableBody = document.getElementById('results-body');
 
             onValue(ref(db, 'leaderboard'), (snapshot) => {
                 const data = snapshot.val();
-                if (!data) return;
-                
+                if (!data) {
+                    tableBody.innerHTML = "<tr><td colspan='3' style='text-align:center;'>No student results recorded yet.</td></tr>";
+                    return;
+                }
                 const sorted = Object.values(data).sort((a, b) => b.score - a.score);
                 tableBody.innerHTML = sorted.map(s => `
                     <tr>
                         <td>${s.email}</td>
-                        <td><b>${s.score} / ${s.total}</b></td>
-                        <td style="font-size:11px; color:gray;">${s.timestamp}</td>
+                        <td style="font-weight:bold; color:#16a34a;">${s.score} / ${s.total}</td>
+                        <td style="font-size:12px; color:#64748b;">${s.timestamp}</td>
                     </tr>
                 `).join('');
             });
