@@ -3,80 +3,85 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Student Quiz Portal</title>
+    <title>Student Login & Results</title>
     <link rel="stylesheet" href="style.css">
+    <style>
+        /* Styles for the Leaderboard Overlay */
+        #leaderboard-overlay {
+            display: none; 
+            position: fixed; 
+            top: 0; 
+            left: 0; 
+            width: 100%; 
+            height: 100%; 
+            background: white; 
+            z-index: 9999; 
+            overflow-y: auto; 
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        .close-btn {
+            float: right; 
+            padding: 10px 20px; 
+            background: #ef4444; 
+            color: white; 
+            border: none; 
+            border-radius: 5px; 
+            cursor: pointer;
+            font-weight: bold;
+        }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th { background: #3b82f6; color: white; padding: 12px; text-align: left; }
+        td { padding: 12px; border-bottom: 1px solid #e2e8f0; }
+        .admin-link {
+            display: block;
+            text-align: center;
+            margin-top: 40px;
+            color: #cbd5e1;
+            text-decoration: none;
+            font-size: 11px;
+        }
+    </style>
 </head>
 <body>
-    <div id="auth-box" class="card">
-        <h2>Student Login</h2>
-        <p>Enter your details to join the quiz</p>
-        <input type="email" id="email" placeholder="Email Address">
-        <input type="password" id="password" placeholder="Password">
-        <div class="button-group">
-            <button id="loginBtn">Login</button>
-            <button id="signupBtn" class="secondary">Create Account</button>
-        </div>
+
+    <div class="login-container">
+        <h2>Student Quiz Login</h2>
+        <form id="login-form">
+            <input type="email" id="email" placeholder="Email Address" required>
+            <input type="password" id="password" placeholder="Password" required>
+            <button type="submit">Start Test</button>
+        </form>
     </div>
 
-    <div id="quiz-box" class="card" style="display:none;">
-        <div class="header">
-            <span id="user-display"></span>
-            <button id="logoutBtn" class="small">Logout</button>
-        </div>
-        <hr>
-        <div id="question-area">
-            <h2 id="q-text">Waiting for the teacher to start...</h2>
-            <div id="options-grid"></div>
-        </div>
-    </div>
-
-    <script type="module">
-      import { getAuth, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-      
-      // This waits for the button to exist before trying to click it
-      const interval = setInterval(() => {
-        const btn = document.getElementById('logoutBtn');
-        if (btn) {
-          clearInterval(interval);
-          btn.onclick = async () => {
-            const auth = getAuth();
-            try {
-              await signOut(auth);
-              console.log("Logout successful!");
-              window.location.reload(); 
-            } catch (err) {
-              console.error("Logout failed:", err);
-              // If Firebase fails, we force a reload anyway to reset the UI
-              window.location.reload(); 
-            }
-          };
-        }
-      }, 500);
-    </script>
-        <div id="leaderboard-overlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:white; z-index:9999; overflow-y:auto; padding:20px;">
-        <button onclick="document.getElementById('leaderboard-overlay').style.display='none'" style="float:right; padding:10px; background:#ef4444; color:white; border:none; border-radius:5px; cursor:pointer;">Close Leaderboard</button>
-        <h1 style="text-align:center;">🏆 Student Leaderboard</h1>
-        <table style="width:100%; border-collapse:collapse; margin-top:20px;">
+    <div id="leaderboard-overlay">
+        <button class="close-btn" onclick="document.getElementById('leaderboard-overlay').style.display='none'">Close</button>
+        <h1 style="text-align:center; color: #1e293b;">🏆 Live Student Leaderboard</h1>
+        <p style="text-align:center; color: #64748b;">This data is pulled directly from the 'leaderboard' folder</p>
+        
+        <table>
             <thead>
-                <tr style="background:#3b82f6; color:white;">
-                    <th style="padding:10px;">Email</th>
-                    <th style="padding:10px;">Score</th>
-                    <th style="padding:10px;">Time</th>
+                <tr>
+                    <th>Rank</th>
+                    <th>Student Email</th>
+                    <th>Score</th>
+                    <th>Time Submitted</th>
                 </tr>
             </thead>
             <tbody id="leaderboard-content">
-                </tbody>
+                <tr><td colspan="4" style="text-align:center;">Loading scores...</td></tr>
+            </tbody>
         </table>
     </div>
-    
-    <p style="text-align:center; margin-top:50px;">
-        <a href="#" onclick="openLeaderboard()" style="color:#cbd5e1; text-decoration:none; font-size:10px;">Admin View</a>
-    </p>
+
+    <a href="#" class="admin-link" onclick="openLeaderboard()">Admin Leaderboard View</a>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
         import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
-    
+
+        // Firebase Configuration
         const firebaseConfig = {
             apiKey: "AIzaSyAfCfO9iIOxj3wNYcFSntqXaY_ESQ5pYOA",
             authDomain: "studentquiz2026.firebaseapp.com",
@@ -84,27 +89,49 @@
             databaseURL: "https://studentquiz2026-default-rtdb.firebaseio.com",
             appId: "1:31091552266:web:a5b83f22e393a25abeaff3"
         };
-    
+
         const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
         const db = getDatabase(app);
-    
+
+        // --- LOGIN LOGIC ---
+        const loginForm = document.getElementById('login-form');
+        loginForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+
+            signInWithEmailAndPassword(auth, email, password)
+                .then(() => {
+                    window.location.href = "quiz.html";
+                })
+                .catch((error) => {
+                    alert("Login Failed: " + error.message);
+                });
+        });
+
+        // --- LEADERBOARD LOGIC ---
         window.openLeaderboard = function() {
             document.getElementById('leaderboard-overlay').style.display = 'block';
             const content = document.getElementById('leaderboard-content');
             
-            // Use the same 'leaderboard' path your app.js pushes to
+            // Listen to the leaderboard node
             onValue(ref(db, 'leaderboard'), (snapshot) => {
                 const data = snapshot.val();
                 if (!data) {
-                    content.innerHTML = "<tr><td colspan='3' style='text-align:center;'>No scores yet.</td></tr>";
+                    content.innerHTML = "<tr><td colspan='4' style='text-align:center;'>No results yet.</td></tr>";
                     return;
                 }
+
+                // Sort results: Highest score first
                 const sorted = Object.values(data).sort((a, b) => b.score - a.score);
-                content.innerHTML = sorted.map(s => `
+                
+                content.innerHTML = sorted.map((s, index) => `
                     <tr>
-                        <td style="padding:10px; border-bottom:1px solid #eee;">${s.email}</td>
-                        <td style="padding:10px; border-bottom:1px solid #eee;"><b>${s.score} / ${s.total}</b></td>
-                        <td style="padding:10px; border-bottom:1px solid #eee; font-size:12px; color:gray;">${s.timestamp}</td>
+                        <td>#${index + 1}</td>
+                        <td>${s.email}</td>
+                        <td><b style="color:#16a34a;">${s.score} / ${s.total}</b></td>
+                        <td style="color:#94a3b8; font-size:12px;">${s.timestamp}</td>
                     </tr>
                 `).join('');
             });
