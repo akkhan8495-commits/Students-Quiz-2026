@@ -3,67 +3,75 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Student Portal - Login & Results</title>
+    <title>Student Login - Quiz 2026</title>
+    <link rel="stylesheet" href="style.css">
     <style>
-        /* Modern UI Styles */
-        body { font-family: 'Segoe UI', Tahoma, sans-serif; background: #f0f2f5; display: flex; flex-direction: column; align-items: center; min-height: 100vh; margin: 0; padding: 20px; }
-        .login-card { background: white; padding: 40px; border-radius: 12px; shadow: 0 4px 12px rgba(0,0,0,0.1); width: 100%; max-width: 400px; text-align: center; }
-        h1 { color: #1a73e8; margin-bottom: 30px; }
-        input { width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; }
-        button { width: 100%; padding: 12px; background: #1a73e8; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 16px; font-weight: bold; }
-        button:hover { background: #1557b0; }
-
-        /* Leaderboard Overlay Styles */
-        #leaderboard-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: white; z-index: 1000; overflow-y: auto; padding: 30px; box-sizing: border-box; }
-        .modal-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #eee; padding-bottom: 15px; }
+        /* Styles for the leaderboard window */
+        #leaderboard-modal {
+            display: none; 
+            position: fixed; 
+            top: 0; left: 0; 
+            width: 100%; height: 100%; 
+            background: white; 
+            z-index: 9999; 
+            padding: 20px;
+            box-sizing: border-box;
+            overflow-y: auto;
+        }
         table { width: 100%; border-collapse: collapse; margin-top: 20px; }
         th { background: #1a73e8; color: white; padding: 12px; text-align: left; }
-        td { padding: 12px; border-bottom: 1px solid #eee; }
-        .rank { font-weight: bold; color: #5f6368; }
-        .score-p { color: #137333; font-weight: bold; }
-        .admin-trigger { margin-top: 50px; color: #adb5bd; text-decoration: none; font-size: 11px; cursor: pointer; }
+        td { padding: 12px; border-bottom: 1px solid #ddd; }
+        .admin-btn-zone {
+            margin-top: 50px;
+            padding: 20px;
+            border: 2px dashed #cbd5e1;
+            text-align: center;
+        }
     </style>
 </head>
 <body>
-
-    <div class="login-card">
+    <div class="card">
         <h1>Student Portal</h1>
         <p>Login to enter the live quiz room.</p>
-        <form id="login-form">
-            <input type="email" id="email" placeholder="Student Email" required>
-            <input type="password" id="password" placeholder="Password" required>
-            <button type="submit">Enter Quiz Room</button>
-        </form>
+        <hr>
+        <div class="input-group">
+            <input type="email" id="email" placeholder="Student Email" required style="width:100%; padding:10px; margin-bottom:10px;">
+            <input type="password" id="password" placeholder="Password" required style="width:100%; padding:10px; margin-bottom:10px;">
+        </div>
+        <button id="loginBtn" style="width:100%; padding:10px; background:#1a73e8; color:white; border:none; cursor:pointer;">Enter Quiz Room</button>
+    </div>
+
+    <div class="admin-btn-zone">
+        <p style="color: #64748b; font-size: 12px;">TEACHER ONLY AREA</p>
+        <button onclick="viewLeaderboard()" style="background: #334155; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer;">
+            VIEW STUDENT RESULTS
+        </button>
     </div>
 
     <div id="leaderboard-modal">
-        <div class="modal-header">
-            <h2>🏆 Class Leaderboard</h2>
-            <button onclick="document.getElementById('leaderboard-modal').style.display='none'" style="width: auto; background: #ea4335;">Close</button>
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>🏆 Live Leaderboard</h2>
+            <button onclick="document.getElementById('leaderboard-modal').style.display='none'" style="background:red; color:white; padding:10px; border:none; cursor:pointer;">CLOSE</button>
         </div>
         <table>
             <thead>
                 <tr>
-                    <th class="rank">#</th>
                     <th>Email</th>
                     <th>Score</th>
-                    <th>Timestamp</th>
+                    <th>Date</th>
                 </tr>
             </thead>
             <tbody id="leaderboard-rows">
-                <tr><td colspan="4" style="text-align: center;">Loading data...</td></tr>
+                <tr><td colspan="3" style="text-align:center;">Waiting for scores...</td></tr>
             </tbody>
         </table>
     </div>
-
-    <a class="admin-trigger" onclick="viewLeaderboard()">Admin View</a>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
         import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
-        // Your current Firebase Config
         const firebaseConfig = {
             apiKey: "AIzaSyAfCfO9iIOxj3wNYcFSntqXaY_ESQ5pYOA",
             authDomain: "studentquiz2026.firebaseapp.com",
@@ -76,35 +84,30 @@
         const auth = getAuth(app);
         const db = getDatabase(app);
 
-        // --- Handle Login ---
-        document.getElementById('login-form').onsubmit = (e) => {
-            e.preventDefault();
+        // Login Logic
+        document.getElementById('loginBtn').onclick = () => {
             const email = document.getElementById('email').value;
             const pass = document.getElementById('password').value;
             signInWithEmailAndPassword(auth, email, pass)
-                .then(() => window.location.href = "quiz.html")
-                .catch(err => alert("Error: " + err.message));
+                .then(() => { window.location.href = "quiz.html"; })
+                .catch(err => alert("Access Denied: " + err.message));
         };
 
-        // --- Handle Leaderboard ---
+        // Leaderboard Logic - Connects to the 'leaderboard' folder
         window.viewLeaderboard = function() {
             document.getElementById('leaderboard-modal').style.display = 'block';
             const tableBody = document.getElementById('leaderboard-rows');
 
-            // Listening to 'leaderboard' node where app.js sends data
             onValue(ref(db, 'leaderboard'), (snapshot) => {
                 const data = snapshot.val();
-                if (!data) {
-                    tableBody.innerHTML = "<tr><td colspan='4' style='text-align:center;'>No scores yet</td></tr>";
-                    return;
-                }
+                if (!data) return;
+                
                 const sorted = Object.values(data).sort((a, b) => b.score - a.score);
-                tableBody.innerHTML = sorted.map((s, i) => `
+                tableBody.innerHTML = sorted.map(s => `
                     <tr>
-                        <td class="rank">${i + 1}</td>
                         <td>${s.email}</td>
-                        <td class="score-p">${s.score} / ${s.total}</td>
-                        <td style="color:#777; font-size:12px;">${s.timestamp}</td>
+                        <td><b>${s.score} / ${s.total}</b></td>
+                        <td style="font-size:11px; color:gray;">${s.timestamp}</td>
                     </tr>
                 `).join('');
             });
