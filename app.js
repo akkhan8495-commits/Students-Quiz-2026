@@ -52,38 +52,25 @@ function showQuestion() {
     const progEl = document.getElementById('q-progress');
 
     // FINAL MARKS SCREEN
-    if (currentIndex >= allQuestions.length) {
-        progEl.innerText = "Test Finished!";
-        qEl.innerText = "Well Done!";
-        
-        optDiv.innerHTML = `
-            <div style="text-align: center; background: #fffbeb; padding: 30px; border-radius: 15px; border: 3px solid #f59e0b; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
-                <h2 style="color: #92400e; margin-top: 0;">Your Final Marks</h2>
-                <div style="font-size: 64px; font-weight: bold; color: #d97706; margin: 10px 0;">${score} / ${allQuestions.length}</div>
-                
-                <hr style="border: 0; border-top: 1px solid #fde68a; margin: 20px 0;">
-                
-                <div style="background: #ef4444; color: white; padding: 15px; border-radius: 8px; animation: pulse 2s infinite;">
-                    <strong style="font-size: 18px; display: block; margin-bottom: 5px;">⚠️ IMPORTANT ACTION REQUIRED:</strong>
-                    <span style="font-size: 16px;">Please <strong>TAKE A SCREENSHOT</strong> of this screen now. 
-                    This is your only proof of completion to show your teacher.</span>
-                </div>
+    // Add this inside the "Final Marks Screen" if block in app.js
+if (currentIndex >= allQuestions.length) {
+    // 1. Re-connect to Firebase for 1 second
+    import { goOnline, push } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+    goOnline(db);
 
-                <button onclick="location.reload()" style="margin-top: 20px; background: #d97706; color: white; border: none; padding: 12px 25px; border-radius: 8px; cursor: pointer; font-weight: bold; width: 100%;">
-                    Retake Test
-                </button>
-            </div>
+    // 2. Send the data to a new 'leaderboard' folder
+    push(ref(db, 'leaderboard'), {
+        email: auth.currentUser.email,
+        score: score,
+        total: allQuestions.length,
+        timestamp: new Date().toLocaleString()
+    }).then(() => {
+        // 3. Disconnect again immediately
+        goOffline(db);
+    });
 
-            <style>
-                @keyframes pulse {
-                    0% { transform: scale(1); }
-                    50% { transform: scale(1.02); }
-                    100% { transform: scale(1); }
-                }
-            </style>
-        `;
-        return;
-    }
+    // ... (Your existing HTML for the Screenshot/Marks box) ...
+}
 
     const currentQ = allQuestions[currentIndex];
     progEl.innerText = `Question ${currentIndex + 1} of ${allQuestions.length}`;
