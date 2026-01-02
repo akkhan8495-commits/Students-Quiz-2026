@@ -71,6 +71,22 @@ if (currentIndex >= allQuestions.length) {
 
     // ... (Your existing HTML for the Screenshot/Marks box) ...
 }
+import { getDatabase, ref, get, goOffline, goOnline, push } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+
+// Inside the final result screen logic:
+if (currentIndex >= allQuestions.length) {
+    // Re-connect briefly to send the score
+    goOnline(db);
+    
+    push(ref(db, 'leaderboard'), {
+        email: auth.currentUser.email,
+        score: score,
+        total: allQuestions.length,
+        timestamp: new Date().toISOString()
+    }).then(() => {
+        goOffline(db); // Disconnect again for efficiency
+    });
+}
 
     const currentQ = allQuestions[currentIndex];
     progEl.innerText = `Question ${currentIndex + 1} of ${allQuestions.length}`;
